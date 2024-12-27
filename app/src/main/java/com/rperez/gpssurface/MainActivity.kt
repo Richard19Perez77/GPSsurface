@@ -13,8 +13,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -46,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
 class PathViewModel : ViewModel() {
     var minDepth = Int.MAX_VALUE
-    var pathList = mutableStateListOf<Int>()
+    var pathList = mutableListOf<Int>()
 
     fun updatePathList(
         graph: Array<List<Pair<Int, Int>>>,
@@ -105,7 +103,7 @@ class PathViewModel : ViewModel() {
     }
 }
 
-class GPSViewModel : ViewModel() {
+class PointsViewModel : ViewModel() {
 
     var h = 0.0f
     var w = 0.0f
@@ -140,13 +138,14 @@ class GPSViewModel : ViewModel() {
 
 @Composable
 fun Map() {
-    var gpsViewModel = GPSViewModel()
-    var pathViewModel = PathViewModel()
-    var pathList = remember { pathViewModel.pathList }
-    var pointsSelected = remember { mutableStateListOf<Int>() }
+    val gpsViewModel = PointsViewModel()
+    val pathViewModel = PathViewModel()
+
+    val pathList = remember { pathViewModel.pathList }
+    val pointsSelected = remember { mutableStateListOf<Int>() }
     val colors = remember { MutableList(10) { Color.Red } }
+    val maxSelectable = 2
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
-    var maxSelectable = 2
 
     val graph = arrayOf<List<Pair<Int, Int>>>(
         listOf(Pair(1, 1), Pair(3, 3)), // a -> b 1 a to d 3
