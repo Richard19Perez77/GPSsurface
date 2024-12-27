@@ -47,16 +47,11 @@ class PathViewModel : ViewModel() {
     var pathList = mutableListOf<Int>()
 
     fun updatePathList(
-        graph: Array<List<Pair<Int, Int>>>,
-        start: Int,
-        end: Int,
-        labels: List<String>
+        graph: Array<List<Pair<Int, Int>>>, start: Int, end: Int, labels: List<String>
     ) {
         pathList.clear()
         var resString = searchDepthListing(
-            graph,
-            start,
-            end
+            graph, start, end
         )
 
         if (resString.first.isNotEmpty()) {
@@ -68,16 +63,12 @@ class PathViewModel : ViewModel() {
     }
 
     private fun searchDepthListing(
-        lists: Array<List<Pair<Int, Int>>>,
-        start: Int,
-        end: Int
+        lists: Array<List<Pair<Int, Int>>>, start: Int, end: Int
     ): Pair<String, Int> {
         var result: Pair<String, Int> = Pair("${'A' + start}", 0)
 
         fun buildPathPair(
-            start: Int,
-            end: Int,
-            currentPair: Pair<String, Int>
+            start: Int, end: Int, currentPair: Pair<String, Int>
         ) {
             var pairs = lists[start]
             pairs.forEach {
@@ -110,8 +101,7 @@ class PointsViewModel : ViewModel() {
 
     val randomPoints = List(10) {
         Pair(
-            (-90..90).random().toDouble(),
-            (-180..180).random().toDouble()
+            (-90..90).random().toDouble(), (-180..180).random().toDouble()
         )
     }
 
@@ -167,38 +157,34 @@ fun Map() {
         return dx * dx + dy * dy <= radius * radius
     }
 
-    Canvas(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures { offset ->
-                    pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
-                        if ((isPointNear(
-                                offset,
-                                Offset(screenX.toFloat(), screenY.toFloat()),
-                                50f
-                            ))
-                        ) {
-                            if (!pointsSelected.contains(index)) {
-                                if (pointsSelected.size == maxSelectable) {
-                                    pointsSelected.forEach {
-                                        colors[it] = Color.Red
-                                    }
-                                    pointsSelected.clear()
+    Canvas(modifier = Modifier
+        .fillMaxSize()
+        .pointerInput(Unit) {
+            detectTapGestures { offset ->
+                pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
+                    if ((isPointNear(
+                            offset, Offset(screenX.toFloat(), screenY.toFloat()), 50f
+                        ))
+                    ) {
+                        if (!pointsSelected.contains(index)) {
+                            if (pointsSelected.size == maxSelectable) {
+                                pointsSelected.forEach {
+                                    colors[it] = Color.Red
                                 }
-
-                                pointsSelected.add(index)
-                                colors[index] = Color.Green
-                                if (pointsSelected.size < maxSelectable) {
-                                    pathList.clear()
-                                }
+                                pointsSelected.clear()
                             }
-                            return@detectTapGestures
+
+                            pointsSelected.add(index)
+                            colors[index] = Color.Green
+                            if (pointsSelected.size < maxSelectable) {
+                                pathList.clear()
+                            }
                         }
+                        return@detectTapGestures
                     }
                 }
             }
-    ) {
+        }) {
         pointsViewModel.setHW(size.height, size.width)
         pointsViewModel.generateScreenPoints()
         drawRect(
@@ -208,16 +194,14 @@ fun Map() {
         )
         pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
             drawContext.canvas.nativeCanvas.apply {
-                drawText(
-                    labels[index],
+                drawText(labels[index],
                     screenX.toFloat(),
                     screenY.toFloat(),
                     android.graphics.Paint().apply {
                         color = colors[index].toArgb()
                         textSize = 30f
                         textAlign = android.graphics.Paint.Align.CENTER
-                    }
-                )
+                    })
             }
         }
         graph.forEachIndexed { root, value ->
@@ -228,23 +212,22 @@ fun Map() {
                 var destPoint = pointsViewModel.screenPoints[root + dest]
                 var itemX = destPoint.first
                 var itemY = destPoint.second
-                drawContext.canvas.nativeCanvas.apply {
-                    drawLine(
-                        color = Color.Black,
-                        start = Offset(pointAx.toFloat(), pointAy.toFloat()),
-                        end = Offset(itemX.toFloat(), itemY.toFloat()),
-                    )
 
-                    drawText(
-                        dist.toString(),
+                drawLine(
+                    color = Color.Black,
+                    start = Offset(pointAx.toFloat(), pointAy.toFloat()),
+                    end = Offset(itemX.toFloat(), itemY.toFloat()),
+                )
+
+                drawContext.canvas.nativeCanvas.apply {
+                    drawText(dist.toString(),
                         abs((pointAx.toFloat() + itemX.toFloat()) / 2),
                         abs((pointAy.toFloat() + itemY.toFloat()) / 2),
                         android.graphics.Paint().apply {
                             color = Color.LightGray.toArgb()
                             textSize = 30f
                             textAlign = android.graphics.Paint.Align.CENTER
-                        }
-                    )
+                        })
                 }
             }
         }
@@ -253,33 +236,27 @@ fun Map() {
             pointsSelected.sort()
             pathViewModel.minDepth = Int.MAX_VALUE
             pathViewModel.updatePathList(
-                graph,
-                pointsSelected[0],
-                pointsSelected[1],
-                labels
+                graph, pointsSelected[0], pointsSelected[1], labels
             )
         }
-
-        drawContext.canvas.nativeCanvas.apply {
-            lateinit var prev: Pair<Double, Double>
-            lateinit var current: Pair<Double, Double>
-            pathList.forEachIndexed { index, value ->
-                if (index == 0) {
-                    prev = pointsViewModel.screenPoints[value]
-                } else {
-                    current = pointsViewModel.screenPoints[value]
-                    var pointAx = prev.first
-                    var pointAy = prev.second
-                    var itemX = current.first
-                    var itemY = current.second
-                    drawLine(
-                        color = Color.Magenta,
-                        start = Offset(pointAx.toFloat(), pointAy.toFloat()),
-                        end = Offset(itemX.toFloat(), itemY.toFloat()),
-                        strokeWidth = Stroke.DefaultMiter,
-                    )
-                    prev = current
-                }
+        lateinit var prev: Pair<Double, Double>
+        lateinit var current: Pair<Double, Double>
+        pathList.forEachIndexed { index, value ->
+            if (index == 0) {
+                prev = pointsViewModel.screenPoints[value]
+            } else {
+                current = pointsViewModel.screenPoints[value]
+                var pointAx = prev.first
+                var pointAy = prev.second
+                var itemX = current.first
+                var itemY = current.second
+                drawLine(
+                    color = Color.Magenta,
+                    start = Offset(pointAx.toFloat(), pointAy.toFloat()),
+                    end = Offset(itemX.toFloat(), itemY.toFloat()),
+                    strokeWidth = Stroke.DefaultMiter,
+                )
+                prev = current
             }
         }
     }
