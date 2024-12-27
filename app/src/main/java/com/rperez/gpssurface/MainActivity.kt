@@ -80,7 +80,7 @@ fun Map() {
     var gpsViewModel = GPSViewModel()
     val colors = remember { mutableStateListOf(*Array(10) { Color.Red }) }
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
-    var pointsSelected = remember { mutableStateListOf<Int>() }
+    var pointsSelected = mutableListOf<Int>()
     var maxSelectable = 2
     var pathList = mutableListOf<Int>()
 
@@ -102,6 +102,7 @@ fun Map() {
         val dy = point.y - target.y
         return dx * dx + dy * dy <= radius * radius
     }
+
     Canvas(
         modifier = Modifier
             .fillMaxSize()
