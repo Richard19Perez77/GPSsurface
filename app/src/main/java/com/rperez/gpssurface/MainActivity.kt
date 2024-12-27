@@ -138,12 +138,13 @@ class PointsViewModel : ViewModel() {
 
 @Composable
 fun Map() {
-    val gpsViewModel = PointsViewModel()
+    val pointsViewModel = PointsViewModel()
     val pathViewModel = PathViewModel()
 
-    val pathList = remember { pathViewModel.pathList }
     val pointsSelected = remember { mutableStateListOf<Int>() }
+    val pathList = remember { pathViewModel.pathList }
     val colors = remember { MutableList(10) { Color.Red } }
+
     val maxSelectable = 2
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
 
@@ -171,7 +172,7 @@ fun Map() {
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
-                    gpsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
+                    pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
                         if ((isPointNear(
                                 offset,
                                 Offset(screenX.toFloat(), screenY.toFloat()),
@@ -198,14 +199,14 @@ fun Map() {
                 }
             }
     ) {
-        gpsViewModel.setHW(size.height, size.width)
-        gpsViewModel.generateScreenPoints()
+        pointsViewModel.setHW(size.height, size.width)
+        pointsViewModel.generateScreenPoints()
         drawRect(
             color = Color.Blue,
             topLeft = Offset(0f, 0f),
             size = Size(size.width.toFloat(), size.height.toFloat())
         )
-        gpsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
+        pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
                     labels[index],
@@ -220,11 +221,11 @@ fun Map() {
             }
         }
         graph.forEachIndexed { root, value ->
-            var rootPoint = gpsViewModel.screenPoints[root]
+            var rootPoint = pointsViewModel.screenPoints[root]
             var pointAx = rootPoint.first
             var pointAy = rootPoint.second
             value.forEach { (dest, dist) ->
-                var destPoint = gpsViewModel.screenPoints[root + dest]
+                var destPoint = pointsViewModel.screenPoints[root + dest]
                 var itemX = destPoint.first
                 var itemY = destPoint.second
                 drawContext.canvas.nativeCanvas.apply {
@@ -264,9 +265,9 @@ fun Map() {
             lateinit var current: Pair<Double, Double>
             pathList.forEachIndexed { index, value ->
                 if (index == 0) {
-                    prev = gpsViewModel.screenPoints[value]
+                    prev = pointsViewModel.screenPoints[value]
                 } else {
-                    current = gpsViewModel.screenPoints[value]
+                    current = pointsViewModel.screenPoints[value]
                     var pointAx = prev.first
                     var pointAy = prev.second
                     var itemX = current.first
