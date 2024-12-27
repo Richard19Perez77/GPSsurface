@@ -13,6 +13,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -44,7 +46,7 @@ class MainActivity : ComponentActivity() {
 
 class PathViewModel : ViewModel() {
     var minDepth = Int.MAX_VALUE
-    var pathList = mutableListOf<Int>()
+    var pathList = mutableStateListOf<Int>()
 
     fun updatePathList(
         graph: Array<List<Pair<Int, Int>>>,
@@ -140,8 +142,9 @@ class GPSViewModel : ViewModel() {
 fun Map() {
     var gpsViewModel = GPSViewModel()
     var pathViewModel = PathViewModel()
+    var pathList = remember { pathViewModel.pathList }
     var pointsSelected = remember { mutableStateListOf<Int>() }
-    val colors = mutableListOf(*Array(10) { Color.Red })
+    val colors = remember { MutableList(10) { Color.Red } }
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
     var maxSelectable = 2
 
@@ -186,6 +189,9 @@ fun Map() {
 
                                 pointsSelected.add(index)
                                 colors[index] = Color.Green
+                                if (pointsSelected.size < maxSelectable) {
+                                    pathList.clear()
+                                }
                             }
                             return@detectTapGestures
                         }
@@ -242,6 +248,7 @@ fun Map() {
                 }
             }
         }
+
         if (pointsSelected.size == maxSelectable) {
             pointsSelected.sort()
             pathViewModel.minDepth = Int.MAX_VALUE
@@ -256,7 +263,7 @@ fun Map() {
         drawContext.canvas.nativeCanvas.apply {
             lateinit var prev: Pair<Double, Double>
             lateinit var current: Pair<Double, Double>
-            pathViewModel.pathList.forEachIndexed { index, value ->
+            pathList.forEachIndexed { index, value ->
                 if (index == 0) {
                     prev = gpsViewModel.screenPoints[value]
                 } else {
