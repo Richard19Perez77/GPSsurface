@@ -42,7 +42,68 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class GPSViewModel() : ViewModel() {
+class PathViewModel : ViewModel() {
+    var minDepth = Int.MAX_VALUE
+    var pathList = mutableListOf<Int>()
+
+    fun updatePathList(
+        graph: Array<List<Pair<Int, Int>>>,
+        start: Int,
+        end: Int,
+        labels: List<String>
+    ) {
+        pathList.clear()
+        var resString = searchDepthListing(
+            graph,
+            start,
+            end
+        )
+
+        if (resString.first.isNotEmpty()) {
+            var resList = resString.first.toCharArray()
+            resList.forEach {
+                pathList.add(labels.indexOf(it.toString()))
+            }
+        }
+    }
+
+    private fun searchDepthListing(
+        lists: Array<List<Pair<Int, Int>>>,
+        start: Int,
+        end: Int
+    ): Pair<String, Int> {
+        var result: Pair<String, Int> = Pair("${'A' + start}", 0)
+
+        fun buildPathPair(
+            start: Int,
+            end: Int,
+            currentPair: Pair<String, Int>
+        ) {
+            var pairs = lists[start]
+            pairs.forEach {
+                var nextChar = Char(currentPair.first.last().code + it.first)
+                var nextPair =
+                    Pair("${currentPair.first}${nextChar}", it.second + currentPair.second)
+                if (it.first + start == end) {
+                    if (nextPair.second < minDepth) {
+                        result = nextPair
+                        minDepth = nextPair.second
+                    }
+                } else {
+                    buildPathPair(start + it.first, end, nextPair)
+                }
+            }
+        }
+
+        lists[start].forEach {
+            buildPathPair(start, end, result)
+        }
+
+        return result
+    }
+}
+
+class GPSViewModel : ViewModel() {
 
     var h = 0.0f
     var w = 0.0f
@@ -78,11 +139,11 @@ class GPSViewModel() : ViewModel() {
 @Composable
 fun Map() {
     var gpsViewModel = GPSViewModel()
-    val colors = remember { mutableStateListOf(*Array(10) { Color.Red }) }
+    var pathViewModel = PathViewModel()
+    var pointsSelected = remember { mutableStateListOf<Int>() }
+    val colors = mutableListOf(*Array(10) { Color.Red })
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
-    var pointsSelected = mutableListOf<Int>()
     var maxSelectable = 2
-    var pathList = mutableListOf<Int>()
 
     val graph = arrayOf<List<Pair<Int, Int>>>(
         listOf(Pair(1, 1), Pair(3, 3)), // a -> b 1 a to d 3
@@ -121,7 +182,6 @@ fun Map() {
                                         colors[it] = Color.Red
                                     }
                                     pointsSelected.clear()
-                                    pathList.clear()
                                 }
 
                                 pointsSelected.add(index)
@@ -140,8 +200,7 @@ fun Map() {
             topLeft = Offset(0f, 0f),
             size = Size(size.width.toFloat(), size.height.toFloat())
         )
-        var index = 0
-        gpsViewModel.screenPoints.forEach { (screenX, screenY) ->
+        gpsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
                     labels[index],
@@ -154,7 +213,6 @@ fun Map() {
                     }
                 )
             }
-            index++
         }
         graph.forEachIndexed { root, value ->
             var rootPoint = gpsViewModel.screenPoints[root]
@@ -169,7 +227,6 @@ fun Map() {
                         color = Color.Black,
                         start = Offset(pointAx.toFloat(), pointAy.toFloat()),
                         end = Offset(itemX.toFloat(), itemY.toFloat()),
-                        cap = Stroke.DefaultCap,
                     )
 
                     drawText(
@@ -187,24 +244,19 @@ fun Map() {
         }
         if (pointsSelected.size == maxSelectable) {
             pointsSelected.sort()
-            minDepth = Int.MAX_VALUE
-            var resString = searchDepthListing(
+            pathViewModel.minDepth = Int.MAX_VALUE
+            pathViewModel.updatePathList(
                 graph,
                 pointsSelected[0],
-                pointsSelected[1]
+                pointsSelected[1],
+                labels
             )
-            if (resString.first.isNotEmpty()) {
-                var resList = resString.first.toCharArray()
-                resList.forEach {
-                    pathList.add(labels.indexOf(it.toString()))
-                }
-            }
         }
 
         drawContext.canvas.nativeCanvas.apply {
             lateinit var prev: Pair<Double, Double>
             lateinit var current: Pair<Double, Double>
-            pathList.forEachIndexed { index, value ->
+            pathViewModel.pathList.forEachIndexed { index, value ->
                 if (index == 0) {
                     prev = gpsViewModel.screenPoints[value]
                 } else {
@@ -217,46 +269,11 @@ fun Map() {
                         color = Color.Magenta,
                         start = Offset(pointAx.toFloat(), pointAy.toFloat()),
                         end = Offset(itemX.toFloat(), itemY.toFloat()),
-                        cap = Stroke.DefaultCap,
+                        strokeWidth = Stroke.DefaultMiter,
                     )
                     prev = current
                 }
             }
         }
     }
-}
-
-var minDepth = Int.MAX_VALUE
-private fun searchDepthListing(
-    lists: Array<List<Pair<Int, Int>>>,
-    start: Int,
-    end: Int
-): Pair<String, Int> {
-    var result: Pair<String, Int> = Pair("${'A' + start}", 0)
-
-    fun buildPathPair(
-        start: Int,
-        end: Int,
-        currentPair: Pair<String, Int>
-    ) {
-        var pairs = lists[start]
-        pairs.forEach {
-            var nextChar = Char(currentPair.first.last().code + it.first)
-            var nextPair = Pair("${currentPair.first}${nextChar}", it.second + currentPair.second)
-            if (it.first + start == end) {
-                if (nextPair.second < minDepth) {
-                    result = nextPair
-                    minDepth = nextPair.second
-                }
-            } else {
-                buildPathPair(start + it.first, end, nextPair)
-            }
-        }
-    }
-
-    lists[start].forEach {
-        buildPathPair(start, end, result)
-    }
-
-    return result
 }
