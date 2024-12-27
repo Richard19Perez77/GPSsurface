@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.ViewModel
 import com.rperez.gpssurface.ui.theme.GPSsurfaceTheme
+import kotlin.arrayOf
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
@@ -76,38 +77,25 @@ class GPSViewModel() : ViewModel() {
 
 @Composable
 fun Map() {
-    val colors = remember { mutableStateListOf(*Array(10) { Color.Red }) }
     var gpsViewModel = GPSViewModel()
+    val colors = remember { mutableStateListOf(*Array(10) { Color.Red }) }
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
-    var pointsSelected = mutableListOf<Int>()
+    var pointsSelected = remember { mutableStateListOf<Int>() }
     var maxSelectable = 2
+    var pathList = mutableListOf<Int>()
 
     val graph = arrayOf<List<Pair<Int, Int>>>(
-        listOf(
-            Pair(1, 1),
-            Pair(2, 2),
-            Pair(3, 3),
-            Pair(4, 4),
-            Pair(5, 5),
-            Pair(6, 6),
-            Pair(7, 7),
-            Pair(8, 8),
-            Pair(9, 9),
-        )
+        listOf(Pair(1, 1), Pair(3, 3)), // a -> b 1 a to d 3
+        listOf(Pair(1, 2)), // b -> c 2
+        listOf(Pair(1, 3), Pair(3, 4)), // c -> d 3 c to f 3
+        listOf(Pair(1, 4)), // d -> e 4
+        listOf(Pair(1, 5), Pair(3, 5)), // e -> f 5 e to h 3
+        listOf(Pair(1, 6)), // f -> g 6
+        listOf(Pair(1, 7), Pair(3, 6)), // g -> h 7 g to i 3
+        listOf(Pair(1, 8)), // h -> i 8
+        listOf(Pair(1, 9)), // i -> j 9
+        emptyList()
     )
-
-//    val graph = arrayOf<List<Pair<Int, Int>>>(
-//        listOf(Pair(1, 1), Pair(3, 3)), // a -> b 1 a to d 3
-//        listOf(Pair(1, 2)), // b -> c 2
-//        listOf(Pair(1, 3), Pair(3, 4)), // c -> d 3 c to f 3
-//        listOf(Pair(1, 4)), // d -> e 4
-//        listOf(Pair(1, 5), Pair(3, 5)), // e -> f 5 e to h 3
-//        listOf(Pair(1, 6)), // f -> g 6
-//        listOf(Pair(1, 7), Pair(3, 6)), // g -> h 7 g to i 3
-//        listOf(Pair(1, 8)), // h -> i 8
-//        listOf(Pair(1, 9)), // i -> j 9
-//        emptyList()
-//    )
 
     fun isPointNear(point: Offset, target: Offset, radius: Float): Boolean {
         val dx = point.x - target.x
@@ -132,6 +120,7 @@ fun Map() {
                                         colors[it] = Color.Red
                                     }
                                     pointsSelected.clear()
+                                    pathList.clear()
                                 }
 
                                 pointsSelected.add(index)
@@ -195,5 +184,78 @@ fun Map() {
                 }
             }
         }
+        if (pointsSelected.size == maxSelectable) {
+            pointsSelected.sort()
+            minDepth = Int.MAX_VALUE
+            var resString = searchDepthListing(
+                graph,
+                pointsSelected[0],
+                pointsSelected[1]
+            )
+            if (resString.first.isNotEmpty()) {
+                var resList = resString.first.toCharArray()
+                resList.forEach {
+                    pathList.add(labels.indexOf(it.toString()))
+                }
+            }
+        }
+
+        drawContext.canvas.nativeCanvas.apply {
+            lateinit var prev: Pair<Double, Double>
+            lateinit var current: Pair<Double, Double>
+            pathList.forEachIndexed { index, value ->
+                if (index == 0) {
+                    prev = gpsViewModel.screenPoints[value]
+                } else {
+                    current = gpsViewModel.screenPoints[value]
+                    var pointAx = prev.first
+                    var pointAy = prev.second
+                    var itemX = current.first
+                    var itemY = current.second
+                    drawLine(
+                        color = Color.Magenta,
+                        start = Offset(pointAx.toFloat(), pointAy.toFloat()),
+                        end = Offset(itemX.toFloat(), itemY.toFloat()),
+                        cap = Stroke.DefaultCap,
+                    )
+                    prev = current
+                }
+            }
+        }
     }
+}
+
+var minDepth = Int.MAX_VALUE
+private fun searchDepthListing(
+    lists: Array<List<Pair<Int, Int>>>,
+    start: Int,
+    end: Int
+): Pair<String, Int> {
+    var result: Pair<String, Int> = Pair("${'A' + start}", 0)
+
+    fun buildPathPair(
+        start: Int,
+        end: Int,
+        currentPair: Pair<String, Int>
+    ) {
+        var pairs = lists[start]
+        pairs.forEach {
+            var nextChar = Char(currentPair.first.last().code + it.first)
+            var nextPair = Pair("${currentPair.first}${nextChar}", it.second + currentPair.second)
+            if (it.first + start == end) {
+                if (nextPair.second < minDepth) {
+                    result = nextPair
+                    minDepth = nextPair.second
+                }
+            } else {
+                buildPathPair(start + it.first, end, nextPair)
+            }
+        }
+    }
+
+    lists[start].forEach {
+        buildPathPair(start, end, result)
+    }
+
+    return result
 }
