@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.lifecycle.ViewModel
 import com.rperez.gpssurface.ui.theme.GPSsurfaceTheme
 import kotlin.arrayOf
@@ -100,7 +103,7 @@ class PointsViewModel : ViewModel() {
     var h = 0.0f
     var w = 0.0f
 
-    val randomPoints = List(10) {
+    var randomPoints = List(10) {
         Pair(
             (-90..90).random().toDouble(), (-180..180).random().toDouble()
         )
@@ -125,6 +128,15 @@ class PointsViewModel : ViewModel() {
             screenPoints.add(getScreenXY(it.first, it.second))
         }
     }
+
+    fun refreshRandomPoints() {
+        randomPoints = List(10) {
+            Pair(
+                (-90..90).random().toDouble(), (-180..180).random().toDouble()
+            )
+        }
+        generateScreenPoints()
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -136,6 +148,7 @@ fun Map() {
     val pointsSelected = remember { mutableStateListOf<Int>() }
     val pathList = remember { pathViewModel.pathList }
     var colors = remember { MutableList(10) { Color.Red } }
+    var globalCoordsSet = remember { false }
 
     val maxSelectable = 2
     val labels = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
@@ -158,14 +171,30 @@ fun Map() {
         val dy = point.y - target.y
         return dx * dx + dy * dy <= radius * radius
     }
+
     Canvas(modifier = Modifier
         .fillMaxSize()
+        .onGloballyPositioned {
+            if (!globalCoordsSet) {
+                pointsViewModel.setHW(
+                    it.size.height.toFloat(),
+                    it.size.width.toFloat()
+                )
+                pointsViewModel.generateScreenPoints()
+                globalCoordsSet = true
+            }
+        }
         .pointerInput(Unit) {
             detectTapGestures(
-                onLongPress = {
+                onDoubleTap = {
                     colors = MutableList(10) { Color.Red }
                     pathList.clear()
-                    pointsViewModel.screenPoints.clear()
+                    pointsSelected.clear()
+                },
+                onLongPress = {
+                    pointsViewModel.refreshRandomPoints()
+                    colors = MutableList(10) { Color.Red }
+                    pathList.clear()
                     pointsSelected.clear()
                 },
                 onTap = { offset ->
@@ -191,11 +220,10 @@ fun Map() {
                             return@detectTapGestures
                         }
                     }
-                })
+                }
+            )
         }
     ) {
-        pointsViewModel.setHW(size.height, size.width)
-        pointsViewModel.generateScreenPoints()
         drawRect(
             color = Color.Blue,
             topLeft = Offset(0f, 0f),
