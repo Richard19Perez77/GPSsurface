@@ -23,8 +23,6 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.lifecycle.ViewModel
 import com.rperez.gpssurface.ui.theme.GPSsurfaceTheme
 import kotlin.arrayOf
