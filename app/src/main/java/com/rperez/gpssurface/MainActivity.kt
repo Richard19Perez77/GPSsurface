@@ -18,7 +18,7 @@ import com.rperez.gpssurface.ui.theme.GPSsurfaceTheme
  * This activity sets up the app's user interface using Jetpack Compose.
  * It utilizes a Material3 theme and a `Scaffold` layout to structure the UI.
  */
-class MainActivity : ComponentActivity() {
+class MainActivity: ComponentActivity() {
 
     /**
      * Called when the activity is first created.
