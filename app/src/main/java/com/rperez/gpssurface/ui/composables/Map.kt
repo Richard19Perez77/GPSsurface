@@ -52,6 +52,7 @@ fun Map() {
         modifier = Modifier
             .fillMaxSize()
             .onGloballyPositioned {
+                // create screen points based on available canvas size
                 if (!globalCoordsSet) {
                     pointsViewModel.setHW(it.size.height.toFloat(), it.size.width.toFloat())
                     pointsViewModel.generateScreenPoints()
