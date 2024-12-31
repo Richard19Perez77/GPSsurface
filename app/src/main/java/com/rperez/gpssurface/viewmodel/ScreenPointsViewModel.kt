@@ -67,7 +67,7 @@ class ScreenPointsViewModel : ViewModel() {
      * Populates the `screenPoints` list by converting all `randomPoints` to screen coordinates.
      */
     fun generateScreenPoints() {
-        _screenPoints.value.clear()
+        _screenPoints.value = mutableListOf()
         randomPoints.forEach {
             _screenPoints.value.add(getScreenXY(it.first, it.second))
         }
@@ -85,11 +85,6 @@ class ScreenPointsViewModel : ViewModel() {
                 (-90..90).random().toDouble(), (-180..180).random().toDouble()
             )
         }
-        generateScreenPoints()
-    }
-
-    fun initPoints(h: Float, w: Float) {
-        setHW(h, w)
         generateScreenPoints()
     }
 }

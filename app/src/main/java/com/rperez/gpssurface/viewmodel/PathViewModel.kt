@@ -2,7 +2,6 @@ package com.rperez.gpssurface.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * ViewModel for handling pathfinding logic in a weighted graph.
@@ -10,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * This ViewModel provides functionality for finding and updating the shortest path
  * between two nodes using a depth-first search approach.
  */
-class PathViewModel: ViewModel() {
+class PathViewModel : ViewModel() {
 
     /**
      * Tracks the minimum depth (or cost) of the shortest path found.
@@ -39,15 +38,20 @@ class PathViewModel: ViewModel() {
         graph: Array<List<Pair<Int, Int>>>, start: Int, end: Int, labels: List<String>
     ) {
         minDepth = Int.MAX_VALUE
-        pathList.value.clear()
-        pathResult.value = searchDepthListing(graph, start, end)
 
-        if (pathResult.value.first.isNotEmpty()) {
-            val resList = pathResult.value.first.toCharArray()
+        _pathList.value = mutableListOf<Int>()
+        _pathResult.value = searchDepthListing(graph, start, end)
+
+        if (_pathResult.value.first.isNotEmpty()) {
+            val resList = _pathResult.value.first.toCharArray()
             resList.forEach {
-                pathList.value.add(labels.indexOf(it.toString()))
+                _pathList.value.add(labels.indexOf(it.toString()))
             }
         }
+    }
+
+    fun clearPathResult() {
+        _pathResult.value = Pair("", 0)
     }
 
     /**
