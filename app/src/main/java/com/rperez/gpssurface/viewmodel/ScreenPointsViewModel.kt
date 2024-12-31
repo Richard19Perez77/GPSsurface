@@ -1,5 +1,7 @@
 package com.rperez.gpssurface.viewmodel
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 /**
@@ -8,7 +10,7 @@ import androidx.lifecycle.ViewModel
  * This ViewModel provides functionality to generate random geographic points,
  * convert them to screen coordinates, and manage the display dimensions.
  */
-class PointsViewModel : ViewModel() {
+class ScreenPointsViewModel : ViewModel() {
 
     /**
      * The height of the screen in pixels.
@@ -34,7 +36,8 @@ class PointsViewModel : ViewModel() {
      * A mutable list of points mapped to screen coordinates.
      * Each point is represented as a pair of x and y coordinates.
      */
-    val screenPoints = mutableListOf<Pair<Double, Double>>()
+    private val _screenPoints = mutableStateOf(mutableListOf<Pair<Double, Double>>())
+    val screenPoints: MutableState<MutableList<Pair<Double, Double>>> = _screenPoints
 
     /**
      * Sets the height and width of the screen.
@@ -64,9 +67,9 @@ class PointsViewModel : ViewModel() {
      * Populates the `screenPoints` list by converting all `randomPoints` to screen coordinates.
      */
     fun generateScreenPoints() {
-        screenPoints.clear()
+        _screenPoints.value.clear()
         randomPoints.forEach {
-            screenPoints.add(getScreenXY(it.first, it.second))
+            _screenPoints.value.add(getScreenXY(it.first, it.second))
         }
     }
 
@@ -82,6 +85,11 @@ class PointsViewModel : ViewModel() {
                 (-90..90).random().toDouble(), (-180..180).random().toDouble()
             )
         }
+        generateScreenPoints()
+    }
+
+    fun initPoints(h: Float, w: Float) {
+        setHW(h, w)
         generateScreenPoints()
     }
 }

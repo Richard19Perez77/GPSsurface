@@ -6,7 +6,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -17,11 +16,13 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.rperez.gpssurface.PointsSelectedViewModel
 import com.rperez.gpssurface.data.MapData
 import com.rperez.gpssurface.util.PointsUtil
 import com.rperez.gpssurface.viewmodel.PathViewModel
-import com.rperez.gpssurface.viewmodel.PointsViewModel
+import com.rperez.gpssurface.viewmodel.ScreenPointsViewModel
 import kotlin.math.abs
+
 
 /**
  * A composable function that renders an interactive map, displaying points,
@@ -34,13 +35,11 @@ import kotlin.math.abs
 @Composable
 fun Map() {
     // ViewModels for managing points and pathfinding logic
-    val pointsViewModel = PointsViewModel()
+    val screenPointsViewModel = ScreenPointsViewModel()
     val pathViewModel = PathViewModel()
+    val pointSelectedViewModel = PointsSelectedViewModel()
 
-    // State to track selected points and their colors
-    val pointsSelected = remember { mutableStateListOf<Int>() }
-    val pathList = remember { pathViewModel.pathList }
-    var colors = remember { MutableList(10) { Color.Red } }
+    var colors = MutableList(10) { Color.Red }
     var globalCoordsSet = remember { false }
 
     // Data and utility instances
@@ -54,8 +53,10 @@ fun Map() {
             .onGloballyPositioned {
                 // create screen points based on available canvas size
                 if (!globalCoordsSet) {
-                    pointsViewModel.setHW(it.size.height.toFloat(), it.size.width.toFloat())
-                    pointsViewModel.generateScreenPoints()
+                    screenPointsViewModel.initPoints(
+                        it.size.height.toFloat(),
+                        it.size.width.toFloat()
+                    )
                     globalCoordsSet = true
                 }
             }
@@ -63,35 +64,39 @@ fun Map() {
                 detectTapGestures(
                     onDoubleTap = {
                         // Reset state on double tap
-                        colors = MutableList(10) { Color.Red }
-                        pathList.clear()
-                        pointsSelected.clear()
+                        colors.forEachIndexed { index, color ->
+                            colors[index] = Color.Red
+                        }
+                        pathViewModel.pathList.value.clear()
+                        pointSelectedViewModel.pointsSelected.value.clear()
                     },
                     onLongPress = {
                         // Refresh random points on long press
-                        pointsViewModel.refreshRandomPoints()
-                        colors = MutableList(10) { Color.Red }
-                        pathList.clear()
-                        pointsSelected.clear()
+                        screenPointsViewModel.refreshRandomPoints()
+                        colors.forEachIndexed { index, color ->
+                            colors[index] = Color.Red
+                        }
+                        pathViewModel.pathList.value.clear()
+                        pointSelectedViewModel.pointsSelected.value.clear()
                     },
                     onTap = { offset ->
                         // Handle single tap for point selection
-                        pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
+                        screenPointsViewModel.screenPoints.value.forEachIndexed { index, (screenX, screenY) ->
                             if (pointsUtil.isPointNear(
                                     offset, Offset(screenX.toFloat(), screenY.toFloat()), 50f
                                 )
                             ) {
-                                if (!pointsSelected.contains(index)) {
-                                    if (pointsSelected.size == mapData.maxSelectable) {
-                                        pointsSelected.forEach {
+                                if (!pointSelectedViewModel.pointsSelected.value.toList().contains(index)) {
+                                    if (pointSelectedViewModel.pointsSelected.value.size == mapData.maxSelectable) {
+                                        pointSelectedViewModel.pointsSelected.value.forEach {
                                             colors[it] = Color.Red
                                         }
-                                        pointsSelected.clear()
+                                        pointSelectedViewModel.pointsSelected.value.clear()
                                     }
-                                    pointsSelected.add(index)
+                                    pointSelectedViewModel.pointsSelected.value.add(index)
                                     colors[index] = Color.Green
-                                    if (pointsSelected.size < mapData.maxSelectable) {
-                                        pathList.clear()
+                                    if (pointSelectedViewModel.pointsSelected.value.size < mapData.maxSelectable) {
+                                        pathViewModel.pathList.value.clear()
                                     }
                                 }
                                 return@detectTapGestures
@@ -109,7 +114,7 @@ fun Map() {
         )
 
         // Draw points with labels
-        pointsViewModel.screenPoints.forEachIndexed { index, (screenX, screenY) ->
+        screenPointsViewModel.screenPoints.value.forEachIndexed { index, (screenX, screenY) ->
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
                     mapData.labels[index],
@@ -126,11 +131,12 @@ fun Map() {
 
         // Draw edges of the graph
         mapData.graph.forEachIndexed { root, value ->
-            val rootPoint = pointsViewModel.screenPoints[root]
+            val rootPoint = screenPointsViewModel.screenPoints.value[root]
             val pointAx = rootPoint.first
             val pointAy = rootPoint.second
+
             value.forEach { (dest, dist) ->
-                val destPoint = pointsViewModel.screenPoints[root + dest]
+                val destPoint = screenPointsViewModel.screenPoints.value[root + dest]
                 val itemX = destPoint.first
                 val itemY = destPoint.second
 
@@ -156,22 +162,21 @@ fun Map() {
         }
 
         // Update and draw the shortest path if two points are selected
-        if (pointsSelected.size == mapData.maxSelectable) {
-            pointsSelected.sort()
-            pathViewModel.minDepth = Int.MAX_VALUE
+        if (pointSelectedViewModel.pointsSelected.value.size == mapData.maxSelectable) {
+            pointSelectedViewModel.pointsSelected.value.sort()
             pathViewModel.updatePathList(
-                mapData.graph, pointsSelected[0], pointsSelected[1], mapData.labels
+                mapData.graph, pointSelectedViewModel.pointsSelected.value[0], pointSelectedViewModel.pointsSelected.value[1], mapData.labels
             )
         }
 
         // Draw the path
         lateinit var prev: Pair<Double, Double>
         lateinit var current: Pair<Double, Double>
-        pathList.forEachIndexed { index, value ->
+        pathViewModel.pathList.value.forEachIndexed { index, value ->
             if (index == 0) {
-                prev = pointsViewModel.screenPoints[value]
+                prev = screenPointsViewModel.screenPoints.value[value]
             } else {
-                current = pointsViewModel.screenPoints[value]
+                current = screenPointsViewModel.screenPoints.value[value]
                 val pointAx = prev.first
                 val pointAy = prev.second
                 val itemX = current.first

@@ -1,6 +1,8 @@
 package com.rperez.gpssurface.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * ViewModel for handling pathfinding logic in a weighted graph.
@@ -18,7 +20,11 @@ class PathViewModel: ViewModel() {
     /**
      * Stores the indices of the nodes in the shortest path found.
      */
-    var pathList = mutableListOf<Int>()
+    private var _pathList = mutableStateOf(mutableListOf<Int>())
+    var pathList = _pathList
+
+    private var _pathResult = mutableStateOf<Pair<String, Int>>(Pair("", 0))
+    var pathResult = _pathResult
 
     /**
      * Updates the `pathList` by finding the shortest path between two nodes in the graph.
@@ -32,13 +38,14 @@ class PathViewModel: ViewModel() {
     fun updatePathList(
         graph: Array<List<Pair<Int, Int>>>, start: Int, end: Int, labels: List<String>
     ) {
-        pathList.clear()
-        val resString = searchDepthListing(graph, start, end)
+        minDepth = Int.MAX_VALUE
+        pathList.value.clear()
+        pathResult.value = searchDepthListing(graph, start, end)
 
-        if (resString.first.isNotEmpty()) {
-            val resList = resString.first.toCharArray()
+        if (pathResult.value.first.isNotEmpty()) {
+            val resList = pathResult.value.first.toCharArray()
             resList.forEach {
-                pathList.add(labels.indexOf(it.toString()))
+                pathList.value.add(labels.indexOf(it.toString()))
             }
         }
     }
