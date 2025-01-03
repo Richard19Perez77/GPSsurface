@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.rperez.gpssurface.ui.composables.PathDetails
 import com.rperez.gpssurface.ui.composables.PointsMap
+import com.rperez.gpssurface.ui.composables.SurfaceMap
 import com.rperez.gpssurface.ui.theme.GPSsurfaceTheme
 import com.rperez.gpssurface.viewmodel.PathViewModel
 
@@ -38,29 +39,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Apply the app's theme
             GPSsurfaceTheme {
-                // Use a Scaffold to structure the UI
-                val pathViewModel = PathViewModel()
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f)
-                            .background(Color.LightGray)
-                    ) {
-                        PathDetails(pathViewModel.pathResult)
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(3f)
-                    ) {
-                        PointsMap(
-                            pathViewModel.pathList,
-                            pathViewModel::updatePathList,
-                            pathViewModel::clearPathResult
-                        )
-                    }
-                }
+                SurfaceMap()
             }
         }
     }
