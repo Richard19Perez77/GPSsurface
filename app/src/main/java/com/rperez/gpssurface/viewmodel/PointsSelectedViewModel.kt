@@ -2,6 +2,7 @@ package com.rperez.gpssurface.viewmodel
 
 // Import necessary Compose runtime and ViewModel classes
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
@@ -13,12 +14,12 @@ import androidx.lifecycle.ViewModel
 class PointsSelectedViewModel : ViewModel() {
 
     // Backing field for pointsSelected; a mutable state holding a mutable list of integers.
-    private val _pointsSelected = mutableStateOf(mutableListOf<Int>())
+    private val _pointsSelected = mutableStateListOf<Int>()
 
     /**
      * Publicly accessible state of the selected points.
      * Using a getter ensures that the internal backing field is not directly modified outside the ViewModel.
      */
-    val pointsSelected: MutableState<MutableList<Int>>
+    val pointsSelected
         get() = _pointsSelected
 }

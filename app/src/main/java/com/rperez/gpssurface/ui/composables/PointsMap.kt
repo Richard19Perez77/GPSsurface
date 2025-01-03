@@ -17,8 +17,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
 import com.rperez.gpssurface.data.MapData
 import com.rperez.gpssurface.util.PointsUtil
@@ -72,27 +70,8 @@ fun PointsMap(
     Canvas(modifier = Modifier
         .fillMaxSize()
         .onSizeChanged {
-//                if (!globalCoordsSet) {
-//                    screenPointsViewModel.initPoints(
-//                        it.height.toFloat(),
-//                        it.width.toFloat()
-//                    )
-//                    globalCoordsSet = true
-//                }
-        }
-        .onPlaced {
-//                if (!globalCoordsSet) {
-//                    screenPointsViewModel.initPoints(
-//                        it.size.height.toFloat(),
-//                        it.size.width.toFloat()
-//                    )
-//                    globalCoordsSet = true
-//                }
-        }
-        .onGloballyPositioned {
-            // create screen points based on available canvas size
             screenPointsViewModel.setHW(
-                it.size.height.toFloat(), it.size.width.toFloat()
+                it.height.toFloat(), it.width.toFloat()
             )
         }
         .pointerInput(Unit) {
@@ -102,7 +81,7 @@ fun PointsMap(
                     colors[index] = Color.Red
                 }
                 pathList.clear()
-                pointSelectedViewModel.pointsSelected.value = mutableListOf<Int>()
+                pointSelectedViewModel.pointsSelected.clear()
             }, onLongPress = {
                 // Refresh random points on long press
                 screenPointsViewModel.refreshRandomPoints()
@@ -111,7 +90,7 @@ fun PointsMap(
                 }
 
                 pathList.clear()
-                pointsSelected.value = mutableListOf<Int>()
+                pointsSelected.clear()
             }, onTap = { offset ->
                 // Handle single tap for point selection
                 screenPoints.forEachIndexed { index, (screenX, screenY) ->
@@ -119,16 +98,16 @@ fun PointsMap(
                             offset, Offset(screenX.toFloat(), screenY.toFloat()), 50f
                         )
                     ) {
-                        if (!pointsSelected.value.contains(index)) {
-                            if (pointsSelected.value.size == mapData.maxSelectable) {
-                                pointsSelected.value.forEach {
+                        if (!pointsSelected.contains(index)) {
+                            if (pointsSelected.size == mapData.maxSelectable) {
+                                pointsSelected.forEach {
                                     colors[it] = Color.Red
                                 }
-                                pointsSelected.value = mutableListOf()
+                                pointsSelected.clear()
                             }
-                            pointsSelected.value.add(index)
+                            pointsSelected.add(index)
                             colors[index] = Color.Green
-                            if (pointsSelected.value.size < mapData.maxSelectable) {
+                            if (pointsSelected.size < mapData.maxSelectable) {
                                 pathList.clear()
                             }
                         }
@@ -192,10 +171,10 @@ fun PointsMap(
         }
 
         // Update and draw the shortest path if two points are selected
-        if (pointsSelected.value.size == mapData.maxSelectable) {
-            pointsSelected.value.sort()
+        if (pointsSelected.size == mapData.maxSelectable) {
+            pointsSelected.sort()
             updatePathResult(
-                mapData.graph, pointsSelected.value[0], pointsSelected.value[1], mapData.labels
+                mapData.graph, pointsSelected[0], pointsSelected[1], mapData.labels
             )
         } else {
             clearPathResult()
