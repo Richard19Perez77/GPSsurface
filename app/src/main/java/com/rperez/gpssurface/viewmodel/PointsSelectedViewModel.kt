@@ -1,9 +1,7 @@
 package com.rperez.gpssurface.viewmodel
 
 // Import necessary Compose runtime and ViewModel classes
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 /**
