@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import com.rperez.gpssurface.viewmodel.PathViewModel
 
 @Composable
-fun SurfaceMap(){
+fun SurfaceMap() {
     val pathViewModel = PathViewModel()
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -33,5 +33,4 @@ fun SurfaceMap(){
             )
         }
     }
-
 }
