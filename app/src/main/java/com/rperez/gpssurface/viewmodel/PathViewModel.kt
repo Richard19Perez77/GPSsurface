@@ -1,5 +1,6 @@
 package com.rperez.gpssurface.viewmodel
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
@@ -19,7 +20,7 @@ class PathViewModel : ViewModel() {
     /**
      * Stores the indices of the nodes in the shortest path found.
      */
-    private var _pathList = mutableStateOf(mutableListOf<Int>())
+    private var _pathList = mutableStateListOf<Int>()
     var pathList = _pathList
 
     private var _pathResult = mutableStateOf<Pair<String, Int>>(Pair("", 0))
@@ -39,13 +40,13 @@ class PathViewModel : ViewModel() {
     ) {
         minDepth = Int.MAX_VALUE
 
-        _pathList.value = mutableListOf<Int>()
+        _pathList.clear()
         _pathResult.value = searchDepthListing(graph, start, end)
 
         if (_pathResult.value.first.isNotEmpty()) {
             val resList = _pathResult.value.first.toCharArray()
             resList.forEach {
-                _pathList.value.add(labels.indexOf(it.toString()))
+                _pathList.add(labels.indexOf(it.toString()))
             }
         }
     }

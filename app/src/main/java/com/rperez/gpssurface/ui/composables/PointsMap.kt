@@ -6,9 +6,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -36,7 +36,7 @@ import kotlin.math.abs
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PointsMap(
-    pathList: MutableState<MutableList<Int>>,
+    pathList: SnapshotStateList<Int>,
     updatePathResult: (Array<List<Pair<Int, Int>>>, Int, Int, List<String>) -> Unit,
     clearPathResult: () -> Unit
 ) {
@@ -101,7 +101,7 @@ fun PointsMap(
                 colors.forEachIndexed { index, color ->
                     colors[index] = Color.Red
                 }
-                pathList.value = mutableListOf<Int>()
+                pathList.clear()
                 pointSelectedViewModel.pointsSelected.value = mutableListOf<Int>()
             }, onLongPress = {
                 // Refresh random points on long press
@@ -110,7 +110,7 @@ fun PointsMap(
                     colors[index] = Color.Red
                 }
 
-                pathList.value = mutableListOf<Int>()
+                pathList.clear()
                 pointsSelected.value = mutableListOf<Int>()
             }, onTap = { offset ->
                 // Handle single tap for point selection
@@ -129,7 +129,7 @@ fun PointsMap(
                             pointsSelected.value.add(index)
                             colors[index] = Color.Green
                             if (pointsSelected.value.size < mapData.maxSelectable) {
-                                pathList.value = mutableListOf()
+                                pathList.clear()
                             }
                         }
                         return@detectTapGestures
@@ -204,7 +204,7 @@ fun PointsMap(
         // Draw the path
         lateinit var prev: Pair<Double, Double>
         lateinit var current: Pair<Double, Double>
-        pathList.value.forEachIndexed { index, value ->
+        pathList.forEachIndexed { index, value ->
             if (index == 0) {
                 prev = screenPoints.value[value]
             } else {
