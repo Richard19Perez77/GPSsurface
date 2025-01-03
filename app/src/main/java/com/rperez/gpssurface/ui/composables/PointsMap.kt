@@ -114,7 +114,7 @@ fun PointsMap(
                 pointsSelected.value = mutableListOf<Int>()
             }, onTap = { offset ->
                 // Handle single tap for point selection
-                screenPoints.value.forEachIndexed { index, (screenX, screenY) ->
+                screenPoints.forEachIndexed { index, (screenX, screenY) ->
                     if (pointsUtil.isPointNear(
                             offset, Offset(screenX.toFloat(), screenY.toFloat()), 50f
                         )
@@ -148,7 +148,7 @@ fun PointsMap(
         )
 
         // Draw points with labels
-        screenPoints.value.forEachIndexed { index, (screenX, screenY) ->
+        screenPoints.forEachIndexed { index, (screenX, screenY) ->
             drawContext.canvas.nativeCanvas.apply {
                 drawText(mapData.labels[index],
                     screenX.toFloat(),
@@ -163,12 +163,12 @@ fun PointsMap(
 
         // Draw edges of the graph
         mapData.graph.forEachIndexed { root, value ->
-            val rootPoint = screenPoints.value[root]
+            val rootPoint = screenPoints[root]
             val pointAx = rootPoint.first
             val pointAy = rootPoint.second
 
             value.forEach { (dest, dist) ->
-                val destPoint = screenPoints.value[root + dest]
+                val destPoint = screenPoints[root + dest]
                 val itemX = destPoint.first
                 val itemY = destPoint.second
 
@@ -206,9 +206,9 @@ fun PointsMap(
         lateinit var current: Pair<Double, Double>
         pathList.forEachIndexed { index, value ->
             if (index == 0) {
-                prev = screenPoints.value[value]
+                prev = screenPoints[value]
             } else {
-                current = screenPoints.value[value]
+                current = screenPoints[value]
                 val pointAx = prev.first
                 val pointAy = prev.second
                 val itemX = current.first

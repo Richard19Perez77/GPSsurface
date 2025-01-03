@@ -1,7 +1,6 @@
 package com.rperez.gpssurface.viewmodel
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 
 /**
@@ -36,8 +35,8 @@ class ScreenPointsViewModel : ViewModel() {
      * A mutable list of points mapped to screen coordinates.
      * Each point is represented as a pair of x and y coordinates.
      */
-    private val _screenPoints = mutableStateOf(mutableListOf<Pair<Double, Double>>())
-    val screenPoints: MutableState<MutableList<Pair<Double, Double>>> = _screenPoints
+    private val _screenPoints = mutableStateListOf<Pair<Double, Double>>()
+    val screenPoints = _screenPoints
 
     /**
      * Sets the height and width of the screen.
@@ -67,9 +66,9 @@ class ScreenPointsViewModel : ViewModel() {
      * Populates the `screenPoints` list by converting all `randomPoints` to screen coordinates.
      */
     fun generateScreenPoints() {
-        _screenPoints.value = mutableListOf()
+        _screenPoints.clear()
         randomPoints.forEach {
-            _screenPoints.value.add(getScreenXY(it.first, it.second))
+            _screenPoints.add(getScreenXY(it.first, it.second))
         }
     }
 
