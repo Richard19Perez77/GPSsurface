@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -24,14 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rperez.gpssurface.data.MapData
 import com.rperez.gpssurface.viewmodel.GraphViewModel
-import kotlin.math.abs
 
 @Composable
 fun GraphScreen(
     viewModel: GraphViewModel = viewModel(),
 ) {
     val state = viewModel.uiState
-    val pathLabel = state.path?.nodes?.joinToString(" -> ") { MapData.labels[it] }
+    val path = state.path
+    val pathLabel = path?.nodes?.joinToString(" -> ") { MapData.labels[it] }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -49,12 +48,7 @@ fun GraphScreen(
                         else -> "Tap two nodes"
                     }
                 )
-                Text(
-                    when {
-                        state.path != null -> "Cost ${state.path.cost}"
-                        else -> " "
-                    }
-                )
+                Text(if (path != null) "Cost ${path.cost}" else " ")
             }
             TextButton(onClick = viewModel::clear) {
                 Text("Clear")
@@ -82,8 +76,8 @@ fun GraphScreen(
                 drawLine(Color.Black, from, to)
                 drawContext.canvas.nativeCanvas.drawText(
                     edge.weight.toString(),
-                    abs((from.x + to.x) / 2f),
-                    abs((from.y + to.y) / 2f),
+                    (from.x + to.x) / 2f,
+                    (from.y + to.y) / 2f,
                     Paint().apply {
                         color = Color.DarkGray.toArgb()
                         textSize = 30f
@@ -98,7 +92,7 @@ fun GraphScreen(
                     color = Color.Magenta,
                     start = state.positions[a],
                     end = state.positions[b],
-                    strokeWidth = Stroke.DefaultMiter,
+                    strokeWidth = 6f,
                 )
             }
 

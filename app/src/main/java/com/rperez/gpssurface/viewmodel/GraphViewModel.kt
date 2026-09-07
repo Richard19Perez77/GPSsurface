@@ -26,6 +26,7 @@ class GraphViewModel : ViewModel() {
 
     private var canvasWidth = 0f
     private var canvasHeight = 0f
+    private var scrambled = false
 
     fun onCanvasSize(width: Float, height: Float) {
         if (width <= 0f || height <= 0f) return
@@ -33,7 +34,7 @@ class GraphViewModel : ViewModel() {
         canvasWidth = width
         canvasHeight = height
         if (uiState.positions.isEmpty() || sizeChanged) {
-            uiState = uiState.copy(positions = circleLayout(width, height))
+            uiState = uiState.copy(positions = layout(width, height))
         }
     }
 
@@ -56,7 +57,12 @@ class GraphViewModel : ViewModel() {
 
     fun scramble() {
         if (canvasWidth <= 0f || canvasHeight <= 0f) return
+        scrambled = true
         uiState = GraphUiState(positions = randomLayout(canvasWidth, canvasHeight))
+    }
+
+    private fun layout(width: Float, height: Float): List<Offset> {
+        return if (scrambled) randomLayout(width, height) else circleLayout(width, height)
     }
 
     private fun hitIndex(tap: Offset): Int? {
