@@ -33,8 +33,15 @@ class FindPathTest {
     }
 
     @Test
-    fun noPathWhenGraphDoesNotReachEnd() {
-        assertNull(findPath(MapData.edges, start = 9, end = 0))
+    fun reverseTapOrderUsesTheSameEdges() {
+        val path = findPath(MapData.edges, start = 9, end = 0)
+        assertEquals(GraphPath(listOf(9, 8, 6, 5, 2, 1, 0), 28), path)
+    }
+
+    @Test
+    fun noPathWhenDisconnected() {
+        val edges = listOf(Edge(0, 1, 1), Edge(2, 3, 1))
+        assertNull(findPath(edges, start = 0, end = 3))
     }
 
     @Test

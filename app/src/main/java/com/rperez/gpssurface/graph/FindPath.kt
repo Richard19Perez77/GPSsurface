@@ -7,7 +7,11 @@ data class GraphPath(val nodes: List<Int>, val cost: Int)
 fun findPath(edges: List<Edge>, start: Int, end: Int): GraphPath? {
     if (start == end) return GraphPath(listOf(start), 0)
 
-    val adj = edges.groupBy { it.from }
+    val adj = mutableMapOf<Int, MutableList<Edge>>()
+    for (edge in edges) {
+        adj.getOrPut(edge.from) { mutableListOf() }.add(edge)
+        adj.getOrPut(edge.to) { mutableListOf() }.add(Edge(edge.to, edge.from, edge.weight))
+    }
     var best: GraphPath? = null
 
     fun walk(node: Int, path: List<Int>, cost: Int) {
