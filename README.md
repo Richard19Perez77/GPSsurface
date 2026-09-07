@@ -9,8 +9,8 @@ Pathfinding is **not Dijkstra**. It is a recursive walk of every acyclic route t
 Nodes start in a circle on the canvas. Positions are canvas `Offset`s, not geography.
 
 <p>
-<img src="https://github.com/user-attachments/assets/07762bec-8328-4677-947c-6e232360439c" alt="Path on the circle layout" width="220" />
-<img src="https://github.com/user-attachments/assets/4859c02c-533a-486d-a4a8-0a1678f76c85" alt="Path after scrambling nodes" width="220" />
+<img src="https://github.com/user-attachments/assets/07762bec-8328-4677-947c-6e232360439c" alt="Path on the circle layout" width="220"/>
+<img src="https://github.com/user-attachments/assets/4859c02c-533a-486d-a4a8-0a1678f76c85" alt="Path after scrambling nodes" width="220"/>
 </p>
 
 | Gesture | Effect |
